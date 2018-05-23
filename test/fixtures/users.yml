@@ -7,3 +7,7 @@
 phil:
   name: Philippe Girard
   token: secret-token
+
+jim:
+  name: jim
+  token: jimToken

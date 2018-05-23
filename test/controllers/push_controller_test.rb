@@ -43,7 +43,64 @@ class PushControllerTest < ActionDispatch::IntegrationTest
       post push_register_path
     end
 
-    assert_response :error
+    assert_response :unauthorized
+  end
+
+  test "#send is routable" do
+    assert_generates push_notif_path, controller: 'push', action: 'notif'
+    assert_generates push_notif_path + '/1', controller: 'push', action: 'notif', id: 1
+  end
+
+  test "#send send notif to last user when no id is specified" do
+    message = [{
+      to: User.last.token,
+      sound: "default",
+      body: "HELLO DEAR"
+    }]
+
+    Exponent::Push::Client.any_instance.expects(:publish).once.with(message)
+
+    get push_notif_path
+
+    assert_response :success
+    assert_equal 'success', _response[:status]
+  end
+
+  test "#send send notif to specfic id when id is specified" do
+    user = User.first
+
+    message = [{
+      to: user.token,
+      sound: "default",
+      body: "HELLO DEAR"
+    }]
+
+    Exponent::Push::Client.any_instance.expects(:publish).once.with(message)
+
+    get push_notif_path + '/' + user.id.to_s
+
+    assert_response :success
+    assert_equal 'success', _response[:status]
+  end
+
+  test "#send send notif to lsat user when id does not exists" do
+    user = User.first
+    id = user.id
+
+    user.destroy
+
+    message = [{
+      to: User.last.token,
+      sound: "default",
+      body: "HELLO DEAR"
+    }]
+
+    Exponent::Push::Client.any_instance.expects(:publish).once.with(message)
+
+    get push_notif_path + '/' + id.to_s
+
+    assert_response :success
+    assert_equal 'success', _response[:status]
   end
 
   private

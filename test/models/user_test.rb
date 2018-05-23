@@ -19,4 +19,10 @@ class UserTest < ActiveSupport::TestCase
     user.token = nil
     refute_predicate user, :valid?
   end
+
+  test "token is unique" do
+    user = users(:phil)
+    new_user = User.new(token: user.token)
+    refute_predicate new_user, :valid?
+  end
 end
